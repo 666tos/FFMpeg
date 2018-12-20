@@ -16,6 +16,6 @@ Pod::Spec.new do |s|
     s.libraries = 'c++', 'z', 'bz2', 'iconv'
     s.private_header_files = "ffmpeg/include/**/*.h"
     s.header_mappings_dir = "ffmpeg/include"
-    s.vendored_libraries = "ffmpeg/ios/**/*.a"
+    s.vendored_libraries = "ffmpeg/ios/*.a"
     s.preserve_paths = "ffmpeg"
 end
