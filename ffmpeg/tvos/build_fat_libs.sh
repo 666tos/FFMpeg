@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+
+SCRIPTPATH=$PWD
+FAT_DIR="fat"
+ARM64_DIR="arm64"
+X86_64_DIR="x86_64"
+
+if [ ! -d $FAT_DIR ]; then
+	mkdir -p $FAT_DIR
+fi
+
+# combine lib files for various platforms into one
+
+for filepath in $ARM64_DIR/*.a; do
+	filename="${filepath##*/}"
+	echo $filename
+
+	arm64Path="$PWD/$ARM64_DIR/$filename"
+	x8664Path="$PWD/$X86_64_DIR/$filename"
+	fatPath="$PWD/$FAT_DIR/$filename"
+
+	lipo -create $arm64Path $armv7Path $x8664Path -output $fatPath || die "Could not create static output library"
+done
+
+exit 0

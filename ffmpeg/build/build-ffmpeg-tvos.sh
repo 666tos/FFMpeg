@@ -1,7 +1,12 @@
 #!/bin/sh
 
 # directories
-SOURCE="ffmpeg-3.1.1"
+FF_VERSION="4.1"
+#FF_VERSION="snapshot-git"
+if [[ $FFMPEG_VERSION != "" ]]; then
+  FF_VERSION=$FFMPEG_VERSION
+fi
+SOURCE="../"
 FAT="FFmpeg-tvOS"
 
 SCRATCH="scratch-tvos"
@@ -13,8 +18,15 @@ THIN=`pwd`/"thin-tvos"
 
 #FDK_AAC=`pwd`/fdk-aac/fdk-aac-ios
 
-CONFIGURE_FLAGS="--enable-cross-compile --disable-debug --disable-programs \
-                 --disable-doc --enable-pic --disable-indev=avfoundation"
+CONFIGURE_FLAGS="--enable-cross-compile \
+				 --disable-debug --disable-programs --disable-doc \
+				 --disable-encoders --disable-decoders --disable-protocols --disable-filters  \
+				 --disable-muxers --disable-bsfs --disable-indevs --disable-outdevs --disable-demuxers \
+				 --enable-pic \
+				 --enable-decoder=h264 \
+				 --enable-demuxer=mpegts \
+				 --enable-parser=h264 \
+				 --enable-videotoolbox"
 
 if [ "$X264" ]
 then
@@ -23,7 +35,7 @@ fi
 
 if [ "$FDK_AAC" ]
 then
-	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-libfdk-aac"
+	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-libfdk-aac --enable-nonfree"
 fi
 
 # avresample
@@ -34,7 +46,7 @@ ARCHS="arm64 x86_64"
 COMPILE="y"
 LIPO="y"
 
-DEPLOYMENT_TARGET="9.0"
+DEPLOYMENT_TARGET="10.2"
 
 if [ "$*" ]
 then
@@ -127,7 +139,7 @@ then
 		    $CONFIGURE_FLAGS \
 		    --extra-cflags="$CFLAGS" \
 		    --extra-ldflags="$LDFLAGS" \
-		    --prefix="$THIN/`basename $PWD`" \
+		    --prefix="$THIN/$ARCH" \
 		|| exit 1
 
 		xcrun -sdk $XCRUN_SDK make -j3 install $EXPORT || exit 1
