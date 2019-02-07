@@ -19,12 +19,6 @@ Pod::Spec.new do |s|
 	    sp.private_header_files = "ffmpeg/include/**/*.h"
 	    sp.header_mappings_dir = "ffmpeg/include"
 	    sp.vendored_libraries = "ffmpeg/ios/*.a"
-
-        # disallow i386 simulator builds, which are only happening when min deployment target is below 10.0
-        sp.xcconfig = {
-            'VALID_ARCHS[sdk=iphonesimulator*]' => 'x86_64',
-            'VALID_ARCHS[sdk=iphoneos*]' => 'arm64 armv7',
-        }
 	end
 
  	s.subspec "tvOS" do |sp|
