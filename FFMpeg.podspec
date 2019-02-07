@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
     s.preserve_paths = "ffmpeg"
 
  	s.subspec "iOS" do |sp|
-		sp.ios.deployment_target = "9.0"
+		sp.ios.deployment_target = "10.0"
 	    sp.private_header_files = "ffmpeg/include/**/*.h"
 	    sp.header_mappings_dir = "ffmpeg/include"
 	    sp.vendored_libraries = "ffmpeg/ios/*.a"
