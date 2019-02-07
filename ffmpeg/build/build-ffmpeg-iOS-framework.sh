@@ -2,7 +2,7 @@
 
 # directories
 SCRATCH=`pwd`/"scratch"
-ARCHS="arm64 armv7 x86_64 i386"
+ARCHS="arm64 armv7 x86_64"
 
 FFMPEG_VERSION="4.1"
 export FFMPEG_VERSION
