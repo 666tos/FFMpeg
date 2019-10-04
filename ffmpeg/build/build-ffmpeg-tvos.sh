@@ -1,17 +1,12 @@
 #!/bin/sh
 
-# directories
-FF_VERSION="4.1"
-#FF_VERSION="snapshot-git"
-if [[ $FFMPEG_VERSION != "" ]]; then
-  FF_VERSION=$FFMPEG_VERSION
-fi
 SOURCE="../"
-FAT="FFmpeg-tvOS"
+FOLDER="FFmpeg-tvOS"
 
-SCRATCH="scratch-tvos"
+SCRATCH="$FOLDER/scratch"
 # must be an absolute path
-THIN=`pwd`/"thin-tvos"
+THIN=`pwd`/"$FOLDER/thin"
+
 
 # absolute path to x264 library
 #X264=`pwd`/../x264-ios/x264-iOS
@@ -43,36 +38,16 @@ fi
 
 ARCHS="arm64 x86_64"
 
-COMPILE="y"
-LIPO="y"
-
 DEPLOYMENT_TARGET="10.2"
 
-if [ "$*" ]
-then
-	if [ "$*" = "lipo" ]
-	then
-		# skip compile
-		COMPILE=
-	else
-		ARCHS="$*"
-		if [ $# -eq 1 ]
-		then
-			# skip lipo
-			LIPO=
-		fi
-	fi
-fi
-
-if [ "$COMPILE" ]
-then
+function Prepare() {
 	if [ ! `which yasm` ]
 	then
 		echo 'Yasm not found'
 		if [ ! `which brew` ]
 		then
 			echo 'Homebrew not found. Trying to install...'
-                        ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" \
+						ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" \
 				|| exit 1
 		fi
 		echo 'Trying to install Yasm...'
@@ -93,7 +68,9 @@ then
 		curl http://www.ffmpeg.org/releases/$SOURCE.tar.bz2 | tar xj \
 			|| exit 1
 	fi
+}
 
+function Build() {
 	CWD=`pwd`
 	for ARCH in $ARCHS
 	do
@@ -104,15 +81,15 @@ then
 		CFLAGS="-arch $ARCH"
 		if [ "$ARCH" = "x86_64" ]
 		then
-		    PLATFORM="AppleTVSimulator"
-		    CFLAGS="$CFLAGS -mtvos-simulator-version-min=$DEPLOYMENT_TARGET"
+			PLATFORM="AppleTVSimulator"
+			CFLAGS="$CFLAGS -mtvos-simulator-version-min=$DEPLOYMENT_TARGET"
 		else
-		    PLATFORM="AppleTVOS"
-		    CFLAGS="$CFLAGS -mtvos-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
-		    if [ "$ARCH" = "arm64" ]
-		    then
-		        EXPORT="GASPP_FIX_XCODE5=1"
-		    fi
+			PLATFORM="AppleTVOS"
+			CFLAGS="$CFLAGS -mtvos-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
+			if [ "$ARCH" = "arm64" ]
+			then
+				EXPORT="GASPP_FIX_XCODE5=1"
+			fi
 		fi
 
 		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
@@ -132,37 +109,27 @@ then
 		fi
 
 		TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
-		    --target-os=darwin \
-		    --arch=$ARCH \
-		    --cc="$CC" \
-		    --ar="$AR" \
-		    $CONFIGURE_FLAGS \
-		    --extra-cflags="$CFLAGS" \
-		    --extra-ldflags="$LDFLAGS" \
-		    --prefix="$THIN/$ARCH" \
+			--target-os=darwin \
+			--arch=$ARCH \
+			--cc="$CC" \
+			--ar="$AR" \
+			$CONFIGURE_FLAGS \
+			--extra-cflags="$CFLAGS" \
+			--extra-ldflags="$LDFLAGS" \
+			--prefix="$THIN/$ARCH" \
 		|| exit 1
 
 		xcrun -sdk $XCRUN_SDK make -j3 install $EXPORT || exit 1
 		cd $CWD
 	done
-fi
+}
 
-if [ "$LIPO" ]
-then
-	echo "building fat binaries..."
-	mkdir -p $FAT/lib
-	set - $ARCHS
-	CWD=`pwd`
-	cd $THIN/$1/lib
-	for LIB in *.a
-	do
-		cd $CWD
-		echo lipo -create `find $THIN -name $LIB` -output $FAT/lib/$LIB 1>&2
-		lipo -create `find $THIN -name $LIB` -output $FAT/lib/$LIB || exit 1
-	done
+function CopyHeaders() {
+	cp -rf $THIN/${ARCHS[0]}/include $FOLDER
+}
 
-	cd $CWD
-	cp -rf $THIN/$1/include $FAT
-fi
+Prepare
+Build
+CopyHeaders
 
 echo Done

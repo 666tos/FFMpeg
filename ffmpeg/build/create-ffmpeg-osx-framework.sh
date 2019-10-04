@@ -2,7 +2,7 @@
 
 CURRENT_FOLDER=`pwd`
 
-ARCHS="arm64 armv7 x86_64"
+ARCHS="x86_64"
 FFMPEG_VERSION="4.1"
 export FFMPEG_VERSION
 HEADER_SUFFIX=".h"
@@ -10,7 +10,7 @@ FRAMEWORK_NAME="FFmpeg"
 
 FRAMEWORK_EXT=".framework"
 FRAMEWORK="$FRAMEWORK_NAME$FRAMEWORK_EXT"
-BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-iOS"
+BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-OSX"
 SCRATCH="$BUILD_FOLDER/scratch"
 
 BUILD_INCLUDE_FOLDER="$BUILD_FOLDER/include"
@@ -115,7 +115,7 @@ EOF
 }
 
 function CreateInfoPlist() {
-  DEFAULT_iOS_SDK_VERSION=`defaults read $(xcode-select -p)/Platforms/iPhoneOS.platform/version CFBundleShortVersionString`
+  DEFAULT_MACOS_SDK_VERSION=`defaults read $(xcode-select -p)/Platforms/MacOSX.platform/version CFBundleShortVersionString`
   DTCompiler=`defaults read $(xcode-select -p)/../info DTCompiler`
   DTPlatformBuild=`defaults read $(xcode-select -p)/../info DTPlatformBuild`
   DTSDKBuild=`defaults read $(xcode-select -p)/../info DTSDKBuild`
@@ -147,7 +147,7 @@ function CreateInfoPlist() {
           <string>????</string>
           <key>CFBundleSupportedPlatforms</key>
           <array>
-          <string>iPhoneOS</string>
+          <string>MacOSX</string>
           </array>
           <key>CFBundleVersion</key>
           <string>1</string>
@@ -156,13 +156,13 @@ function CreateInfoPlist() {
           <key>DTPlatformBuild</key>
           <string>$DTPlatformBuild</string>
           <key>DTPlatformName</key>
-          <string>iphoneos</string>
+          <string>macosx</string>
           <key>DTPlatformVersion</key>
-          <string>$DEFAULT_iOS_SDK_VERSION</string>
+          <string>$DEFAULT_MACOS_SDK_VERSION</string>
           <key>DTSDKBuild</key>
           <string>$DTSDKBuild</string>
           <key>DTSDKName</key>
-          <string>iphoneos$DEFAULT_iOS_SDK_VERSION</string>
+          <string>macosx$DEFAULT_MACOS_SDK_VERSION</string>
           <key>DTXcode</key>
           <string>$DTXcode</string>
           <key>DTXcodeBuild</key>
