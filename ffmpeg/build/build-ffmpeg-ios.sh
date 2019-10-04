@@ -7,11 +7,12 @@ if [[ $FFMPEG_VERSION != "" ]]; then
   FF_VERSION=$FFMPEG_VERSION
 fi
 SOURCE="../"
+FOLDER="FFmpeg-iOS"
 FAT="FFmpeg-iOS"
 
-SCRATCH="scratch"
+SCRATCH="$FOLDER/scratch"
 # must be an absolute path
-THIN=`pwd`/"thin"
+THIN=`pwd`/"$FOLDER/thin"
 
 # absolute path to x264 library
 #X264=`pwd`/fat-x264

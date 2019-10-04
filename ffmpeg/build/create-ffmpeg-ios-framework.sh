@@ -12,7 +12,6 @@ FRAMEWORK_NAME="FFmpeg"
 FRAMEWORK_EXT=".framework"
 FRAMEWORK="$FRAMEWORK_NAME$FRAMEWORK_EXT"
 BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-iOS"
-BUILD_THIN_FOLDER="$CURRENT_FOLDER/thin"
 BUILD_INCLUDE_FOLDER="$BUILD_FOLDER/include"
 BUILD_LIB_FOLDER="$BUILD_FOLDER/lib"
 OUTPUT_FOLDER="$CURRENT_FOLDER/$FRAMEWORK"
@@ -27,29 +26,6 @@ BUNDLE_ID="org.ffmpeg.FFmpeg"
 function CreateFramework() {
   rm -rf $OUTPUT_FOLDER
   mkdir -p $OUTPUT_HEADER_FOLDER $OUTPUT_MODULES_FOLDER
-}
-
-function CompileSource() {
-  ./build-ffmpeg.sh $ARCHS
-  ./build-ffmpeg.sh lipo
-}
-
-function MergeStaticLibrary() {
-  local files=""
-
-  for ARCH in $ARCHS; do
-    folder="$SCRATCH/$ARCH"
-    name="$FRAMEWORK_NAME$ARCH.a"
-    ar cru $name $(find $folder -name "*.o")
-    files="$files $name"
-  done
-
-  lipo -create $files -output FFmpeg
-
-  for file in $files; do
-    rm -rf $file
-  done
-  mv $FRAMEWORK_NAME $OUTPUT_FOLDER
 }
 
 function RenameHeader() {
@@ -123,7 +99,7 @@ function CreateInfoPlist() {
   DTPlatformBuild=`defaults read $(xcode-select -p)/../info DTPlatformBuild`
   DTSDKBuild=`defaults read $(xcode-select -p)/../info DTSDKBuild`
   DTXcode=`defaults read $(xcode-select -p)/../info DTXcode`
-  DTXcodeBuild=`defaults read $(xcode-select -p)/../info DTXcodeBuild`
+  DTXcodeBuild=`defaults read $(xcode-select -p)/../info DTxcodebuild`
   OS_BUILD_VERSION=$(sw_vers -buildVersion)
   cat > $OUTPUT_INFO_PLIST_FILE <<EOF
   <?xml version="1.0" encoding="UTF-8"?>
@@ -182,9 +158,7 @@ function CreateInfoPlist() {
 EOF
 }
 
-CompileSource
 CreateFramework
-MergeStaticLibrary
 RenameHeader
 CreateModulemapAndUmbrellaHeader
 CopyInttype
