@@ -23,8 +23,15 @@ echo "$BUILD_FOLDER_MACCATALYST/$FRAMEWORK"
 #	-framework "$BUILD_FOLDER_MACOS/$FRAMEWORK" \
 #	-framework "$BUILD_FOLDER_TVOS/$FRAMEWORK" \
 
+#xcodebuild -create-xcframework \
+#	-framework "$BUILD_FOLDER_IOS/$FRAMEWORK" \
+#	-framework "$BUILD_FOLDER_MACCATALYST/$FRAMEWORK" \
+#	-output "$XCFRAMEWORK"
+
 xcodebuild -create-xcframework \
-	-framework "$BUILD_FOLDER_IOS/$FRAMEWORK" \
-	-framework "$BUILD_FOLDER_MACCATALYST/$FRAMEWORK" \
+	-library "$BUILD_FOLDER_IOS/tmp/$FRAMEWORK_NAME" \
+	-headers "$BUILD_FOLDER_IOS/include/" \
 	-output "$XCFRAMEWORK"
+
+# -library "$BUILD_FOLDER_MACCATALYST/tmp/$FRAMEWORK_NAME" \
 

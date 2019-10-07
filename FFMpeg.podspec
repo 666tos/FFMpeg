@@ -21,13 +21,6 @@ Pod::Spec.new do |s|
         sp.vendored_libraries = "ffmpeg/ios/*.a"
     end
 
-    s.subspec "tvOS" do |sp|
-        sp.tvos.deployment_target = "10.2"
-        sp.private_header_files = "ffmpeg/include/**/*.h"
-        sp.header_mappings_dir = "ffmpeg/include"
-        sp.vendored_libraries = "ffmpeg/tvos/*.a"
-    end
-
     s.subspec "OSX" do |sp|
         sp.osx.deployment_target = "10.10"
         sp.private_header_files = "ffmpeg/include/**/*.h"

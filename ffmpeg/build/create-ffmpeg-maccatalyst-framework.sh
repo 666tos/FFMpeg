@@ -14,6 +14,7 @@ BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-maccatalyst"
 SCRATCH="$BUILD_FOLDER/scratch"
 
 BUILD_INCLUDE_FOLDER="$BUILD_FOLDER/include"
+TMP_FOLDER="$BUILD_FOLDER/tmp"
 BUILD_LIB_FOLDER="$BUILD_FOLDER/lib"
 OUTPUT_FOLDER="$BUILD_FOLDER/$FRAMEWORK"
 OUTPUT_INFO_PLIST_FILE="$OUTPUT_FOLDER/Info.plist"
@@ -25,27 +26,6 @@ VERSION_NEW_NAME="Version.h"
 BUNDLE_ID="org.ffmpeg.FFmpeg"
 
 source framework_utils.sh
-
-mkdir -p "$BUILD_FOLDER/tmp"
-
-function LibTool() {
-	local object_files=$1
-	local xcode_path=$(xcode-select -p)
-
-	echo "$object_files"
-
-	libtool -static -arch_only $ARCHS -D \
-		 -syslibroot $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
-		 -L$xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/iOSSupport/usr/lib \
-		 -L$xcode_path/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/uikitformac \
-		 $object_files \
-		 -o $FRAMEWORK_NAME
-
-	mv $FRAMEWORK_NAME $OUTPUT_FOLDER
-}
-
-#MergeStaticLibrary
-#LibTool
 
 function CreateInfoPlist() {
 	default_macos_sdk_version=`defaults read $(xcode-select -p)/Platforms/MacOSX.platform/version CFBundleShortVersionString`
@@ -60,12 +40,30 @@ EOF
 	WriteInfoPlist "MacOSX" "macosx" $default_macos_sdk_version "10.15" "$extra_entries"
 }
 
+function LibTool() {
+	local object_files=$1
+	local xcode_path=$(xcode-select -p)
+
+	echo "$object_files"
+
+	libtool -static -arch_only $ARCHS -D \
+		-syslibroot $xcode_path/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+		-L$xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/usr/lib \
+		-L$xcode_path/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/maccatalyst \
+		$object_files \
+		-o "$TMP_FOLDER/$FRAMEWORK_NAME"
+
+#	lipo -create "$TMP_FOLDER/$FRAMEWORK_NAME" -o "$OUTPUT_FOLDER/$FRAMEWORK_NAME"
+
+	cp "$TMP_FOLDER/$FRAMEWORK_NAME" "$OUTPUT_FOLDER"
+}
+
+CreateTmpFolder
 CreateFramework
+RenameHeader
+CreateModulemapAndUmbrellaHeader
+CopyInttype
+WriteInfoPlist
 
-FindObjectFiles
-LibTool $OBJECT_FILES
-
-#RenameHeader
-#CreateModulemapAndUmbrellaHeader
-#CopyInttype
-#CreateInfoPlist
+FindAllObjectFiles
+LibTool "$OBJECT_FILES"

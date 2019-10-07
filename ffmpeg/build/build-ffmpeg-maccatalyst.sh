@@ -20,7 +20,9 @@ function Build() {
 		mkdir -p "$SCRATCH/$ARCH"
 		cd "$SCRATCH/$ARCH"
 
-		CFLAGS="-arch $ARCH -target x86_64-apple-ios13.0-macabi"
+		local xcode_path=$(xcode-select -p)
+
+		CFLAGS="-arch $ARCH"
 		PLATFORM="MacOSX"
 
 		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
@@ -41,6 +43,17 @@ function Build() {
 			CFLAGS="$CFLAGS -I$FDK_AAC/include"
 			LDFLAGS="$LDFLAGS -L$FDK_AAC/lib"
 		fi
+
+		CFLAGS="$CFLAGS -target x86_64-apple-ios13.0-macabi \
+				-isysroot $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+				-isystem $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/usr/include \
+				-iframework $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/System/Library/Frameworks"
+
+		LDFLAGS="$LDFLAGS -target x86_64-apple-ios13.0-macabi \
+				-isysroot $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
+				-L$xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/usr/lib \
+				-L$xcode_path/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/maccatalyst \
+				-iframework $xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/System/Library/Frameworks"		
 
 		TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
 			--target-os=darwin \

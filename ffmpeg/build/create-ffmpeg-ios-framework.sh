@@ -14,6 +14,7 @@ BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-iOS"
 SCRATCH="$BUILD_FOLDER/scratch"
 
 BUILD_INCLUDE_FOLDER="$BUILD_FOLDER/include"
+TMP_FOLDER="$BUILD_FOLDER/tmp"
 BUILD_LIB_FOLDER="$BUILD_FOLDER/lib"
 OUTPUT_FOLDER="$BUILD_FOLDER/$FRAMEWORK"
 OUTPUT_INFO_PLIST_FILE="$OUTPUT_FOLDER/Info.plist"
@@ -40,9 +41,27 @@ EOF
 	WriteInfoPlist "iPhoneOS" "iphoneos" $default_ios_sdk_version "8.0" "$extra_entries"
 }
 
+function LibTool() {
+	local object_files=$1
+
+	local xcode_path=$(xcode-select -p)
+
+	libtool -static -D \
+		 -syslibroot $xcode_path/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk \
+		 -L$xcode_path/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/iOSSupport/usr/lib \
+		 $object_files \
+		 -o "$TMP_FOLDER/$FRAMEWORK_NAME"
+
+	cp "$TMP_FOLDER/$FRAMEWORK_NAME" "$OUTPUT_FOLDER"
+}
+
+CreateTmpFolder
 CreateFramework
-MergeStaticLibraryIntoFramework
 RenameHeader
 CreateModulemapAndUmbrellaHeader
 CopyInttype
 CreateInfoPlist
+
+FindAllObjectFiles
+LibTool "$OBJECT_FILES"
+

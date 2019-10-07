@@ -5,25 +5,40 @@ function CreateFramework() {
 	mkdir -p $OUTPUT_HEADER_FOLDER $OUTPUT_MODULES_FOLDER
 }
 
-function FindObjectFiles() {
+function CreateTmpFolder() {
+	rm -rf $TMP_FOLDER
+	mkdir $TMP_FOLDER
+}
+
+function FindAllObjectFiles() {
+	local files=""
+
 	cd "$BUILD_FOLDER"
-	rm -rf tmp
-	mkdir tmp
-	cd tmp
 
 	OBJECT_FILES=""
 
 	for ARCH in $ARCHS; do
 		folder="$SCRATCH/$ARCH"
-		
-		echo $folder
 
 		name=$(find $folder -name "*.o")
 		OBJECT_FILES="$OBJECT_FILES $name"
 	done
+}
 
-	echo "RESULT:"
-	echo $__result
+function FindObjectFiles() {
+	local arch=$1
+
+	cd "$BUILD_FOLDER"
+
+	OBJECT_FILES=""
+
+	folder="$SCRATCH/$arch"
+
+	name=$(find $folder -name "*.o")
+	OBJECT_FILES="$OBJECT_FILES $name"
+
+#	echo "RESULT:"
+#	echo $OBJECT_FILES
 }
 
 function MergeStaticLibraryIntoFramework() {
