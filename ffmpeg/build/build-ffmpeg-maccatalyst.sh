@@ -10,7 +10,7 @@ THIN=`pwd`/"$FOLDER/thin"
 
 ARCHS="x86_64"
 
-DEPLOYMENT_TARGET="10.10"
+DEPLOYMENT_TARGET="10.15"
 
 function Build() {
 	CWD=`pwd`
@@ -20,9 +20,8 @@ function Build() {
 		mkdir -p "$SCRATCH/$ARCH"
 		cd "$SCRATCH/$ARCH"
 
-		CFLAGS="-arch $ARCH"
+		CFLAGS="-arch $ARCH -target x86_64-apple-ios13.0-macabi"
 		PLATFORM="MacOSX"
-		CFLAGS="$CFLAGS -mmacosx-version-min=$DEPLOYMENT_TARGET"
 
 		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
 		CC="xcrun -sdk $XCRUN_SDK clang"

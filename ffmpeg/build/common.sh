@@ -6,6 +6,8 @@ if [[ $FFMPEG_VERSION != "" ]]; then
   FF_VERSION=$FFMPEG_VERSION
 fi
 
+SOURCE="../"
+
 CONFIGURE_FLAGS="--enable-cross-compile \
 				 --disable-debug --disable-programs --disable-doc \
 				 --disable-encoders --disable-decoders --disable-protocols --disable-filters  \

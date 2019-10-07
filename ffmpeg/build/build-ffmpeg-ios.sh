@@ -1,138 +1,86 @@
 #!/bin/sh
 
-# directories
-FF_VERSION="4.1"
-#FF_VERSION="snapshot-git"
-if [[ $FFMPEG_VERSION != "" ]]; then
-  FF_VERSION=$FFMPEG_VERSION
-fi
-SOURCE="../"
+source common.sh
+
 FOLDER="FFmpeg-iOS"
 
 SCRATCH="$FOLDER/scratch"
 # must be an absolute path
 THIN=`pwd`/"$FOLDER/thin"
 
-# absolute path to x264 library
-#X264=`pwd`/fat-x264
-
-#FDK_AAC=`pwd`/../fdk-aac-build-script-for-iOS/fdk-aac-ios
-
-CONFIGURE_FLAGS="--enable-cross-compile \
-				 --disable-debug --disable-programs --disable-doc \
-				 --disable-encoders --disable-decoders --disable-protocols --disable-filters  \
-				 --disable-muxers --disable-bsfs --disable-indevs --disable-outdevs --disable-demuxers \
-				 --enable-pic \
-				 --enable-decoder=h264 \
-				 --enable-demuxer=mpegts \
-				 --enable-parser=h264 \
-				 --enable-videotoolbox"
-
-if [ "$X264" ]
-then
-	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-gpl --enable-libx264"
-fi
-
-if [ "$FDK_AAC" ]
-then
-	CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-libfdk-aac --enable-nonfree"
-fi
-
-# avresample
-#CONFIGURE_FLAGS="$CONFIGURE_FLAGS --enable-avresample"
-
 ARCHS="arm64 armv7 x86_64"
 
 DEPLOYMENT_TARGET="9.0"
 
-if [ ! `which yasm` ]
-then
-	echo 'Yasm not found'
-	if [ ! `which brew` ]
-	then
-		echo 'Homebrew not found. Trying to install...'
-					ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" \
-			|| exit 1
-	fi
-	echo 'Trying to install Yasm...'
-	brew install yasm || exit 1
-fi
-if [ ! `which gas-preprocessor.pl` ]
-then
-	echo 'gas-preprocessor.pl not found. Trying to install...'
-	(curl -L https://github.com/libav/gas-preprocessor/raw/master/gas-preprocessor.pl \
-		-o /usr/local/bin/gas-preprocessor.pl \
-		&& chmod +x /usr/local/bin/gas-preprocessor.pl) \
-		|| exit 1
-fi
+function Build() {
+	CWD=`pwd`
+	for ARCH in $ARCHS
+	do
+		echo "building $ARCH..."
+		mkdir -p "$SCRATCH/$ARCH"
+		cd "$SCRATCH/$ARCH"
 
-if [ ! -r $SOURCE ]
-then
-	echo 'FFmpeg source not found. Trying to download...'
-	curl http://www.ffmpeg.org/releases/$SOURCE.tar.bz2 | tar xj \
-		|| exit 1
-fi
+		CFLAGS="-arch $ARCH"
+		if [ "$ARCH" = "i386" -o "$ARCH" = "x86_64" ]
+		then
+			PLATFORM="iPhoneSimulator"
+			CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET"
+		else
+			PLATFORM="iPhoneOS"
+			CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
+			if [ "$ARCH" = "arm64" ]
+			then
+				EXPORT="GASPP_FIX_XCODE5=1"
+			fi
+		fi
 
-cp -rf $THIN/$1/include $FOLDER
+		XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
+		CC="xcrun -sdk $XCRUN_SDK clang"
 
-CWD=`pwd`
-for ARCH in $ARCHS
-do
-	echo "building $ARCH..."
-	mkdir -p "$SCRATCH/$ARCH"
-	cd "$SCRATCH/$ARCH"
-
-	CFLAGS="-arch $ARCH"
-	if [ "$ARCH" = "i386" -o "$ARCH" = "x86_64" ]
-	then
-		PLATFORM="iPhoneSimulator"
-		CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET"
-	else
-		PLATFORM="iPhoneOS"
-		CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"
+		# force "configure" to use "gas-preprocessor.pl" (FFmpeg 3.3)
 		if [ "$ARCH" = "arm64" ]
 		then
-			EXPORT="GASPP_FIX_XCODE5=1"
+			AS="gas-preprocessor.pl -arch aarch64 -- $CC"
+		else
+			AS="gas-preprocessor.pl -- $CC"
 		fi
-	fi
 
-	XCRUN_SDK=`echo $PLATFORM | tr '[:upper:]' '[:lower:]'`
-	CC="xcrun -sdk $XCRUN_SDK clang"
+		CXXFLAGS="$CFLAGS"
+		LDFLAGS="$CFLAGS"
+		if [ "$X264" ]
+		then
+			CFLAGS="$CFLAGS -I$X264/include"
+			LDFLAGS="$LDFLAGS -L$X264/lib"
+		fi
+		if [ "$FDK_AAC" ]
+		then
+			CFLAGS="$CFLAGS -I$FDK_AAC/include"
+			LDFLAGS="$LDFLAGS -L$FDK_AAC/lib"
+		fi
 
-	# force "configure" to use "gas-preprocessor.pl" (FFmpeg 3.3)
-	if [ "$ARCH" = "arm64" ]
-	then
-		AS="gas-preprocessor.pl -arch aarch64 -- $CC"
-	else
-		AS="gas-preprocessor.pl -- $CC"
-	fi
+		TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
+			--target-os=darwin \
+			--arch=$ARCH \
+			--cc="$CC" \
+			--as="$AS" \
+			$CONFIGURE_FLAGS \
+			--extra-cflags="$CFLAGS" \
+			--extra-ldflags="$LDFLAGS" \
+			--prefix="$THIN/$ARCH" \
+		|| exit 1
 
-	CXXFLAGS="$CFLAGS"
-	LDFLAGS="$CFLAGS"
-	if [ "$X264" ]
-	then
-		CFLAGS="$CFLAGS -I$X264/include"
-		LDFLAGS="$LDFLAGS -L$X264/lib"
-	fi
-	if [ "$FDK_AAC" ]
-	then
-		CFLAGS="$CFLAGS -I$FDK_AAC/include"
-		LDFLAGS="$LDFLAGS -L$FDK_AAC/lib"
-	fi
+		make -j3 install $EXPORT || exit 1
+		cd $CWD
+	done
+}
 
-	TMPDIR=${TMPDIR/%\/} $CWD/$SOURCE/configure \
-		--target-os=darwin \
-		--arch=$ARCH \
-		--cc="$CC" \
-		--as="$AS" \
-		$CONFIGURE_FLAGS \
-		--extra-cflags="$CFLAGS" \
-		--extra-ldflags="$LDFLAGS" \
-		--prefix="$THIN/$ARCH" \
-	|| exit 1
+function CopyHeaders() {
+	archs_array=($ARCHS)
+	cp -rf $THIN/${archs_array[0]}/include $FOLDER
+}
 
-	make -j3 install $EXPORT || exit 1
-	cd $CWD
-done
+Prepare
+Build
+CopyHeaders
 
 echo Done

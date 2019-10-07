@@ -2,7 +2,7 @@
 
 CURRENT_FOLDER=`pwd`
 
-ARCHS="x86_64"
+ARCHS="arm64 x86_64"
 FFMPEG_VERSION="4.1"
 export FFMPEG_VERSION
 HEADER_SUFFIX=".h"
@@ -10,7 +10,7 @@ FRAMEWORK_NAME="FFmpeg"
 
 FRAMEWORK_EXT=".framework"
 FRAMEWORK="$FRAMEWORK_NAME$FRAMEWORK_EXT"
-BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-OSX"
+BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-tvOS"
 SCRATCH="$BUILD_FOLDER/scratch"
 
 BUILD_INCLUDE_FOLDER="$BUILD_FOLDER/include"
@@ -27,9 +27,9 @@ BUNDLE_ID="org.ffmpeg.FFmpeg"
 source framework_utils.sh
 
 function CreateInfoPlist() {
-	default_macos_sdk_version=`defaults read $(xcode-select -p)/Platforms/MacOSX.platform/version CFBundleShortVersionString`
+	default_tvos_sdk_version=`defaults read $(xcode-select -p)/Platforms/AppleTVOS.platform/version CFBundleShortVersionString`
 
-	WriteInfoPlist "MacOSX" "macosx" $default_macos_sdk_version "10.10"
+	WriteInfoPlist "AppleTVOS" "appletvos" $default_tvos_sdk_version "12.0"
 }
 
 CreateFramework
