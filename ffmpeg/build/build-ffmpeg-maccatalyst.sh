@@ -2,7 +2,7 @@
 
 source common.sh
 
-FOLDER="FFmpeg-OSX"
+FOLDER="FFmpeg-maccatalyst"
 
 SCRATCH="$FOLDER/scratch"
 # must be an absolute path

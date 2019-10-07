@@ -33,7 +33,7 @@ function CreateInfoPlist() {
 }
 
 CreateFramework
-MergeStaticLibrary
+MergeStaticLibraryIntoFramework
 RenameHeader
 CreateModulemapAndUmbrellaHeader
 CopyInttype

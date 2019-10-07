@@ -40,10 +40,8 @@ EOF
 	WriteInfoPlist "iPhoneOS" "iphoneos" $default_ios_sdk_version "8.0" "$extra_entries"
 }
 
-
-
 CreateFramework
-MergeStaticLibrary
+MergeStaticLibraryIntoFramework
 RenameHeader
 CreateModulemapAndUmbrellaHeader
 CopyInttype
