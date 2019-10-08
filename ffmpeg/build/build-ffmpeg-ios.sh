@@ -8,7 +8,7 @@ SCRATCH="$FOLDER/scratch"
 # must be an absolute path
 THIN=`pwd`/"$FOLDER/thin"
 
-ARCHS="arm64 armv7 x86_64"
+ARCHS="arm64 x86_64"
 
 DEPLOYMENT_TARGET="9.0"
 
@@ -25,6 +25,7 @@ function Build() {
 		then
 			PLATFORM="iPhoneSimulator"
 			CFLAGS="$CFLAGS -mios-simulator-version-min=$DEPLOYMENT_TARGET"
+			CONFIGURE_FLAGS="$CONFIGURE_FLAGS --disable-asm"
 		else
 			PLATFORM="iPhoneOS"
 			CFLAGS="$CFLAGS -mios-version-min=$DEPLOYMENT_TARGET -fembed-bitcode"

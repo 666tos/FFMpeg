@@ -2,14 +2,16 @@
 
 CURRENT_FOLDER=`pwd`
 
-ARCHS="arm64 armv7 x86_64"
+ARCHS="arm64 x86_64"
 FFMPEG_VERSION="4.1"
 export FFMPEG_VERSION
 HEADER_SUFFIX=".h"
 FRAMEWORK_NAME="FFmpeg"
 
 FRAMEWORK_EXT=".framework"
+LIB_EXT=".a"
 FRAMEWORK="$FRAMEWORK_NAME$FRAMEWORK_EXT"
+LIBRARY="$FRAMEWORK_NAME$LIB_EXT"
 BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-iOS"
 SCRATCH="$BUILD_FOLDER/scratch"
 
@@ -43,6 +45,7 @@ EOF
 
 function LibTool() {
 	local object_files=$1
+	local arch=$2
 
 	local xcode_path=$(xcode-select -p)
 
@@ -50,18 +53,15 @@ function LibTool() {
 		 -syslibroot $xcode_path/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk \
 		 -L$xcode_path/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/System/iOSSupport/usr/lib \
 		 $object_files \
-		 -o "$TMP_FOLDER/$FRAMEWORK_NAME"
-
-	cp "$TMP_FOLDER/$FRAMEWORK_NAME" "$OUTPUT_FOLDER"
+		 -o "$TMP_FOLDER/$FRAMEWORK_NAME-$arch$LIB_EXT"
 }
 
 CreateTmpFolder
-CreateFramework
-RenameHeader
-CreateModulemapAndUmbrellaHeader
-CopyInttype
-CreateInfoPlist
 
-FindAllObjectFiles
-LibTool "$OBJECT_FILES"
+for ARCH in $ARCHS
+do
+	FindObjectFiles "$ARCH"
+	LibTool "$OBJECT_FILES" "$ARCH"
+done
+
 

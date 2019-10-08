@@ -20,7 +20,7 @@ function FindAllObjectFiles() {
 	for ARCH in $ARCHS; do
 		folder="$SCRATCH/$ARCH"
 
-		name=$(find $folder -name "*.o")
+		name=$(find $folder  -maxdepth 3 -name "*.o")
 		OBJECT_FILES="$OBJECT_FILES $name"
 	done
 }
@@ -34,7 +34,7 @@ function FindObjectFiles() {
 
 	folder="$SCRATCH/$arch"
 
-	name=$(find $folder -name "*.o")
+	name=$(find $folder -maxdepth 3 -name "*.o")
 	OBJECT_FILES="$OBJECT_FILES $name"
 
 #	echo "RESULT:"

@@ -9,7 +9,9 @@ HEADER_SUFFIX=".h"
 FRAMEWORK_NAME="FFmpeg"
 
 FRAMEWORK_EXT=".framework"
+LIB_EXT=".a"
 FRAMEWORK="$FRAMEWORK_NAME$FRAMEWORK_EXT"
+LIBRARY="$FRAMEWORK_NAME$LIB_EXT"
 BUILD_FOLDER="$CURRENT_FOLDER/FFmpeg-maccatalyst"
 SCRATCH="$BUILD_FOLDER/scratch"
 
@@ -27,43 +29,23 @@ BUNDLE_ID="org.ffmpeg.FFmpeg"
 
 source framework_utils.sh
 
-function CreateInfoPlist() {
-	default_macos_sdk_version=`defaults read $(xcode-select -p)/Platforms/MacOSX.platform/version CFBundleShortVersionString`
-
-	read -r -d '' extra_entries << EOF
-			<key>UIDeviceFamily</key>
-			<array>
-				<integer>2</integer>
-			</array>
-EOF
-
-	WriteInfoPlist "MacOSX" "macosx" $default_macos_sdk_version "10.15" "$extra_entries"
-}
-
 function LibTool() {
 	local object_files=$1
 	local xcode_path=$(xcode-select -p)
 
 	echo "$object_files"
 
-	libtool -static -arch_only $ARCHS -D \
-		-syslibroot $xcode_path/MacOSX.platform/Developer/SDKs/MacOSX.sdk \
-		-L$xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/iOSSupport/usr/lib \
+	export MACOSX_DEPLOYMENT_TARGET=10.15
+
+	libtool \
+		-static -arch_only $ARCHS -D \
+		-syslibroot $xcode_path/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk \
+		-L$xcode_path/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/iOSSupport/usr/lib \
 		-L$xcode_path/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/maccatalyst \
 		$object_files \
-		-o "$TMP_FOLDER/$FRAMEWORK_NAME"
-
-#	lipo -create "$TMP_FOLDER/$FRAMEWORK_NAME" -o "$OUTPUT_FOLDER/$FRAMEWORK_NAME"
-
-	cp "$TMP_FOLDER/$FRAMEWORK_NAME" "$OUTPUT_FOLDER"
+		-o "$TMP_FOLDER/$LIBRARY"
 }
 
 CreateTmpFolder
-CreateFramework
-RenameHeader
-CreateModulemapAndUmbrellaHeader
-CopyInttype
-WriteInfoPlist
-
 FindAllObjectFiles
 LibTool "$OBJECT_FILES"
